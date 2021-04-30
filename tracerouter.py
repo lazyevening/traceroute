@@ -1,17 +1,26 @@
 import argparse
 import subprocess
 import re
+import ipwhois
+
+
+def get_AS_info(ip):
+    obj = ipwhois.IPWhois(ip)
+    res = obj.lookup_whois()
+    return res["asn"] + " COUNTRY: " + str(res['nets'][0]["country"]) + " CITY: " + str(res['nets'][0]["city"])
 
 
 def decode_line(line):
     decoded_line = line.decode('CP866')
-    print(decoded_line)
+    match_local_ip = re.findall(r"192\.168\.\d{1,3}\.\d{1,3}", decoded_line)
     match_ip = re.findall(r"\d{1,3}\.\d{1,3}\.\d{1,3}\.\d{1,3}", decoded_line)
     match_miss = re.findall(r"\* {8}\* {8}\*", decoded_line)
-    if match_ip:
-        return match_ip
+    if match_local_ip:
+        return f"IP: {match_ip[0]}, ASN: Local"
+    elif match_ip:
+        return f"IP: {match_ip[0]}, ASN: {get_AS_info(match_ip[0])}"
     elif match_miss:
-        return "****"
+        return f"****"
 
 
 def trace(address: str):
@@ -33,4 +42,5 @@ def main():
 
 
 if __name__ == '__main__':
-    print(main())
+    for line in main():
+        print(line)

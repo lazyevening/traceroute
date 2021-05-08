@@ -1,13 +1,22 @@
 import argparse
 import subprocess
-import re
 import ipwhois
+import re
+import json
+from urllib.request import urlopen
+
+
+def find_city(ip):
+    url = 'http://ipinfo.io/' + ip + '/json'
+    response = urlopen(url)
+    data = json.load(response)
+    return data['city']
 
 
 def get_AS_info(ip):
     obj = ipwhois.IPWhois(ip)
     res = obj.lookup_whois()
-    return res["asn"] + " COUNTRY: " + str(res['nets'][0]["country"]) + " CITY: " + str(res['nets'][0]["city"])
+    return res["asn"] + " COUNTRY: " + str(res['nets'][0]["country"]) + " CITY: " + find_city(ip)
 
 
 def decode_line(line):
@@ -42,5 +51,5 @@ def main():
 
 
 if __name__ == '__main__':
-    for line in main():
-        print(line)
+    for node in main():
+        print(node)
